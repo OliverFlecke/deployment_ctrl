@@ -1,15 +1,29 @@
 #!/usr/bin/env python3
 
-# import paho.mqtt.client as mqtt
-import git
+import paho.mqtt.client as mqtt
 import os
 
-print("Started controller")
+# Configuration
+mnt = "/host/host_mnt"
+# workdir = f'{mnt}/Users/oliver/projects/deployment_ctrl'
+# branch = 'main'
 
-workdir = "/host/host_mnt/Users/oliver/projects/deployment_ctrl"
+# os.system(f'git -C {workdir} pull origin {branch}')
 
-# g = git.cmd.Git(workdir)
-# g.pull()
+# MQTT Config
+url = 'paletten.oliverflecke.me'
+port = 1883
+client = mqtt.Client()
+client.connect(url, port, 60)
 
-os.chdir(workdir)
-os.system(f'git pull origin main')
+def on_message(client, userdata, message):
+    print('Got message')
+    print(f'Topic: "{message.topic}" - Payload: {message.payload}')
+
+client.on_message = on_message
+
+client.subscribe("deploy")
+
+print("Controller READY")
+
+client.loop_forever()
