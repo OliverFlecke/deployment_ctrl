@@ -8,7 +8,8 @@ print("Started controller")
 
 workdir = "/host/host_mnt/Users/oliver/projects/deployment_ctrl"
 
-print(f'Files: {os.listdir(workdir)}')
+# g = git.cmd.Git(workdir)
+# g.pull()
 
-g = git.cmd.Git(workdir)
-g.status()
+os.chdir(workdir)
+os.system(f'git pull origin main')
