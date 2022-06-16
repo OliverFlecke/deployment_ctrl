@@ -1,0 +1,6 @@
+name: Finance
+directory: /Users/oliver/projects/finance-tools
+type: git
+git:
+  branch: master
+  command: pull
