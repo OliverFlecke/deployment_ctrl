@@ -7,14 +7,25 @@ import yaml
 import json
 import os
 
+
+def getLoggingLevel() -> int:
+    match os.environ.get('LOG_LEVEL', 'INFO').upper():
+        case 'ERROR': return logging.ERROR
+        case 'WARNING': return logging.WARNING
+        case 'DEBUG': return logging.DEBUG
+        case _: return logging.INFO
+
+
 logging.basicConfig(
-    format='%(asctime)s [%(levelname)s] %(message)s', level=logging.INFO)
+    format='%(asctime)s [%(levelname)s] %(message)s', level=getLoggingLevel())
 
 # Configuration
-mnt = "/host/host_mnt"
+root_dir = os.environ.get('ROOT_DIR', '/')
+url = os.environ.get('MQTT_URL')
+if not url or url == '':
+    logging.error('MQTT_URL not provided')
+    exit(1)
 
-# MQTT Config
-url = 'paletten.oliverflecke.me'
 port = 1883
 client = mqtt.Client()
 client.connect(url, port, 60)
@@ -33,7 +44,9 @@ def handleDeploy(config: Dict):
     logging.info(f'Deploying {config["name"]}')
 
     tool = config['type']
-    dir = config['directory']
+    dir = root_dir + \
+        config['directory'] if root_dir != '/' else config['directory']
+
     current = os.getcwd()
     os.chdir(dir)
 

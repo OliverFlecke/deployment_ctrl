@@ -11,4 +11,8 @@ RUN pip install -r requirements.txt
 
 COPY app.py .
 
+ENV LOG_LEVEL=INFO
+ENV ROOT_DIR=
+ENV MQTT_URL=
+
 ENTRYPOINT [ "python3", "app.py" ]

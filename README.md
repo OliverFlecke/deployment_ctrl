@@ -13,8 +13,12 @@ Currently these are served as static files or in docker containers, which manual
 Because we want to execute commands against the host, the host file system has to be mounted into the container
 
 ```sh
-docker run -ti \
+docker run -ti --rm --name test \
+    --pid=host \
+    -e ROOT_DIR="/host/host_mnt" \
+    -e MQTT_URL=paletten.oliverflecke.me \
     --privileged \
+    --volume $(pwd)/config:/config \
     --volume /:/host \
     oliverflecke/deployment_ctrl \
     chroot /host
