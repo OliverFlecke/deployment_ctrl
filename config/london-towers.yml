@@ -1,0 +1,8 @@
+name: London towers
+directory: /Users/oliver/projects/apps/london-towers
+type: docker
+commands:
+  - pull oliverflecke/london-towers:latest
+  - stop london-towers
+  - rm london-towers
+  - run --name london-towers -p 3020:3000 oliverflecke/london-towers:latest &

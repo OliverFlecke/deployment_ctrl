@@ -3,19 +3,15 @@
 from typing import Dict
 import logging
 import paho.mqtt.client as mqtt
-import git
 import yaml
+import json
 import os
 
 logging.basicConfig(
-    format='%(asctime)s [%(levelname)s] %(message)s', level=logging.DEBUG)
+    format='%(asctime)s [%(levelname)s] %(message)s', level=logging.INFO)
 
 # Configuration
 mnt = "/host/host_mnt"
-# workdir = f'{mnt}/Users/oliver/projects/deployment_ctrl'
-# branch = 'main'
-
-# os.system(f'git -C {workdir} pull origin {branch}')
 
 # MQTT Config
 url = 'paletten.oliverflecke.me'
@@ -26,38 +22,45 @@ client.connect(url, port, 60)
 
 def getConfig(project: str) -> Dict:
     name = f'config/{project}.yml'
+    if not os.path.isfile(name):
+        return
+
     with open(name, 'r') as f:
         return yaml.load(f, yaml.Loader)
-
-
-def deployGit(config: Dict):
-    branch = config["git"]["branch"]
-    command = config["git"]["command"]
-    dir = config["directory"]
-    os.system(f'git -C {dir} {command} origin {branch}')
 
 
 def handleDeploy(config: Dict):
     logging.info(f'Deploying {config["name"]}')
 
-    match config["type"]:
-        case 'git':
-            deployGit(config)
-        case _:
-            logging.warn(
-                f'Unable to handle deployment for type "{config["type"]}"')
+    tool = config['type']
+    dir = config['directory']
+    current = os.getcwd()
+    os.chdir(dir)
+
+    for command in config['commands']:
+        os.system(f'{tool} {command}')
+
+    os.chdir(current)
+
+    logging.info(f'Deployment of {config["name"]} completed')
 
 
 def on_message(client, userdata, message):
-    logging.debug(f'Topic: "{message.topic}" - Payload: {message.payload}')
+    try:
+        payload = message.payload.decode("utf-8")
+        logging.debug(f'Topic: "{message.topic}" - Payload: {payload}')
 
-    project = message.payload
-    config = getConfig(project)
-    if not config:
-        logging.warn(f'No config for project "{project}" was found')
-        return
+        msg = json.loads(payload)
+        project = msg['project']
+        config = getConfig(project)
 
-    logging.debug(config)
+        if not config:
+            logging.warning(f'No config for project "{project}" was found')
+            return
+
+        handleDeploy(config)
+    except Exception as e:
+        logging.error(e)
 
 
 client.on_message = on_message
